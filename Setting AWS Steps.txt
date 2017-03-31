@@ -1,0 +1,68 @@
+Following are the steps required to setup the Web Server and Application. Before this You need to Connect to your AWS Machine via SSH
+Command to connect to AWS EC2 instance
+	sudo ssh -i your_key.pem ec2-user@your_public_domain
+
+Once you are connected with the EC2 instance follow the steps below
+
+1. 	Installing webserver
+		sudo yum install nginx //this will install nginx
+		sudo service nginx start // this will start your nginx server
+
+
+2. 	Installing Web Application
+		sudo pip install django
+
+3. 	Installing and setting up MySql DB
+		sudo yum install mysql-server //this will install mysql server in the machine
+		sudo service mysqld start //this will start the mysql server
+		mysqladmin -u root password //this will create a new root user
+
+		To Access the sql terminal write the following command
+			mysql -u root -p //when prompted for password enter the password you have mentioned while creating the root user
+
+			Create a DB in root user
+				create database "mysite_db"
+
+4. 	Starting Setting up Django
+		django-admin startproject mysite //this will create a new project when you do ls you can see new folder named('mysite') is created
+
+		cd mysite/mysite //this will take you to your project directory
+		vim settings.py //this will let you edit the settings.py file
+
+		We need to make two changes in settings.py file
+			under "INSTALLED_APPS" add name of your app('mysite',)
+
+			under "DATABASES=default" comment the existing code and add:
+				'ENGINE': 'django.db.backends.mysql',
+        		'NAME': 'mysite_db', //name of your database
+        		'USER': 'root',
+        		'PASSWORD': 'password', // Password of the root user
+        		'HOST': '/var/lib/mysql/mysql.sock',
+        		'PORT': '3306',	
+
+        	In ALLOWED_HOST add '*' // This will let any request in your webapplication
+
+
+5. 	Installing python-mysql connectors
+		sudo yum install mysql-devel
+		sudo yum install python-devel
+		sudo yum install gcc
+		sudo pip install MySQL-Python
+
+
+6. 	Installing WSGI Gunicorn
+		sudo pip install gunicorn
+
+7. Start Your WebServer
+		gunicorn -b :8000 --env DJANGO_SETTINGS_MODULE=mysite.settings mysite.wsgi &
+
+
+8. 	To allow traffic for required ports, in AWS console you need to add security group for your ec2 instance
+		Login to AWS Console
+		Goto EC2 Instance
+		Goto Security Groups
+		Goto Actions(Menu item)
+		Goto Edit Inbound Rules
+		Add Custom TCP with 80 and 8000 port(As we are using only these two ports)
+
+9. make request from your browser(find your public IP in AWS Console in EC2 Instance details). Now your AWS server is UP AND RUNNING :)
